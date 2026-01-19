@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RP Character Sheet Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #2f3136;
+            --card-bg: #36393f;
+            --text-color: #dcddde;
+            --accent-color: #7289da;
+            --input-bg: #202225;
+            --border-color: #4f545c;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .container {
+            display: flex;
+            gap: 20px;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        /* Form Styling */
+        .editor {
+            flex: 1;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        h2 { border-bottom: 2px solid var(--accent-color); padding-bottom: 5px; color: white; }
+
+        label { display: block; margin-top: 10px; font-size: 0.9em; color: #b9bbbe; }
+        
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: white;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        /* Preview/Capture Area */
+        #capture-area {
+            flex: 1;
+            background: #23272a;
+            padding: 40px;
+            border-radius: 4px;
+            min-width: 500px;
+            border: 1px solid #7289da;
+        }
+
+        .sheet-title {
+            text-align: center;
+            font-size: 2em;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 30px;
+            color: var(--accent-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .section { margin-bottom: 20px; }
+        .section-header {
+            font-weight: bold;
+            color: var(--accent-color);
+            text-transform: uppercase;
+            font-size: 0.85em;
+            margin-bottom: 8px;
+            border-left: 3px solid var(--accent-color);
+            padding-left: 10px;
+        }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .field { margin-bottom: 5px; font-size: 0.95em; }
+        .label { color: #8e9297; font-weight: bold; }
+
+        .backstory-box {
+            background: rgba(0,0,0,0.2);
+            padding: 10px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            min-height: 100px;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 15px 30px;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        button:hover { background: #5b6eae; }
+    </style>
+</head>
+<body>
+
+    <h1>RP Character Sheet Creator</h1>
+
+    <div class="container">
+        <div class="editor">
+            <h2>Edit Character</h2>
+            
+            <h3>General Information</h3>
+            <label>Full Name</label><input type="text" oninput="update('name', this.value)" placeholder="Aris Thorne">
+            <label>Nickname</label><input type="text" oninput="update('nick', this.value)">
+            <div class="grid">
+                <div><label>Gender</label><input type="text" oninput="update('gender', this.value)"></div>
+                <div><label>Sub-Gender</label><input type="text" oninput="update('subgender', this.value)"></div>
+            </div>
+            <label>Sexuality</label><input type="text" oninput="update('sex', this.value)">
+            <label>Origin</label><input type="text" oninput="update('origin', this.value)">
+
+            <h3>Personality</h3>
+            <label>Likes</label><input type="text" oninput="update('likes', this.value)">
+            <label>Dislikes</label><input type="text" oninput="update('dislikes', this.value)">
+            <label>Goals/Motivation</label><textarea oninput="update('goals', this.value)"></textarea>
+
+            <h3>Abilities & Gear</h3>
+            <label>Class</label><input type="text" oninput="update('class', this.value)">
+            <label>Weapons</label><input type="text" oninput="update('weapons', this.value)">
+            <label>Magic</label><input type="text" oninput="update('magic', this.value)">
+            <label>Special Talents</label><input type="text" oninput="update('talents', this.value)">
+            <label>Inventory</label><textarea oninput="update('inv', this.value)"></textarea>
+
+            <h3>Backstory</h3>
+            <textarea oninput="update('story', this.value)" style="height: 100px;"></textarea>
+            
+            <button onclick="downloadImage()">Download as PNG</button>
+        </div>
+
+        <div id="capture-area">
+            <div class="sheet-title" id="out-name">Character Name</div>
+            
+            <div class="section">
+                <div class="section-header">General Information</div>
+                <div class="grid">
+                    <div class="field"><span class="label">Nickname:</span> <span id="out-nick">-</span></div>
+                    <div class="field"><span class="label">Gender:</span> <span id="out-gender">-</span></div>
+                    <div class="field"><span class="label">Sub-Gender:</span> <span id="out-subgender">-</span></div>
+                    <div class="field"><span class="label">Sexuality:</span> <span id="out-sex">-</span></div>
+                    <div class="field" style="grid-column: span 2;"><span class="label">Origin:</span> <span id="out-origin">-</span></div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">Personality</div>
+                <div class="field"><span class="label">Likes:</span> <span id="out-likes">-</span></div>
+                <div class="field"><span class="label">Dislikes:</span> <span id="out-dislikes">-</span></div>
+                <div class="field"><span class="label">Goals:</span> <span id="out-goals">-</span></div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">Abilities & Gear</div>
+                <div class="grid">
+                    <div class="field"><span class="label">Class:</span> <span id="out-class">-</span></div>
+                    <div class="field"><span class="label">Weapons:</span> <span id="out-weapons">-</span></div>
+                    <div class="field"><span class="label">Magic:</span> <span id="out-magic">-</span></div>
+                    <div class="field"><span class="label">Talents:</span> <span id="out-talents">-</span></div>
+                </div>
+                <div class="field" style="margin-top:5px;"><span class="label">Inventory:</span> <span id="out-inv">-</span></div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">Backstory</div>
+                <div class="backstory-box" id="out-story">...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Real-time update function
+        function update(id, value) {
+            const el = document.getElementById('out-' + id);
+            if (el) {
+                el.innerText = value || "-";
+                if(id === 'name' && value === '') el.innerText = "Character Name";
+            }
+        }
+
+        // Image download function
+        function downloadImage() {
+            const area = document.getElementById('capture-area');
+            html2canvas(area, {
+                backgroundColor: "#23272a",
+                scale: 2 // Higher quality
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'character-sheet.png';
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+            });
+        }
+    </script>
+</body>
+</html>
